@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VM-8750 — Option B</title>
+<style>
+  :root {
+    --bg: #0f1419; --bg-elev: #1a2026; --bg-code: #11161b;
+    --fg: #d8dee9; --fg-dim: #8b97a4; --fg-bright: #eceff4;
+    --accent: #88c0d0; --accent-2: #a3be8c; --warn: #ebcb8b; --bad: #bf616a;
+    --border: #2e3640; --border-soft: #232a32;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fdfdfc; --bg-elev: #f5f3ef; --bg-code: #f0ede7;
+      --fg: #2e3440; --fg-dim: #5e6772; --fg-bright: #1a1f29;
+      --accent: #2e6f8e; --accent-2: #4a6e3a; --warn: #8a6d1f; --bad: #8b2c33;
+      --border: #d8d2c8; --border-soft: #e8e4dc;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 48px 32px 80px; }
+  header { margin-bottom: 32px; }
+  h1 {
+    font: 600 26px/1.25 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    margin: 0 0 8px; color: var(--fg-bright); letter-spacing: -0.01em;
+  }
+  .goal { color: var(--fg-dim); font-size: 14px; margin: 0; }
+  h2 {
+    font: 600 17px/1.3 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    color: var(--fg-bright);
+    margin: 36px 0 8px; padding-top: 18px;
+    border-top: 1px solid var(--border-soft);
+    letter-spacing: -0.005em;
+  }
+  h2 .tag { float: right; margin-top: 2px; }
+  h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  h3 {
+    font: 600 14px/1.4 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    color: var(--fg-bright); margin: 18px 0 8px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    font-size: 11px; color: var(--fg-dim);
+  }
+  p { margin: 0 0 12px; }
+  ul { margin: 0 0 12px; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+  li::marker { color: var(--accent); }
+  strong { color: var(--fg-bright); font-weight: 600; }
+  .why {
+    display: block;
+    color: var(--fg-dim);
+    font-size: 13.5px;
+    margin-top: 2px;
+  }
+  .why::before { content: "→ "; color: var(--accent); font-weight: 600; }
+  code {
+    font: 12.5px/1.5 "SF Mono", Menlo, Consolas, monospace;
+    background: var(--bg-code); color: var(--accent);
+    padding: 1px 5px; border-radius: 3px;
+    border: 1px solid var(--border-soft);
+  }
+  .tag {
+    display: inline-block;
+    font: 600 10px/1.4 -apple-system, sans-serif;
+    padding: 2px 7px; border-radius: 10px;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    vertical-align: middle;
+  }
+  .tag-ok { background: rgba(163,190,140,0.16); color: var(--accent-2); }
+  .tag-warn { background: rgba(235,203,139,0.16); color: var(--warn); }
+  .tag-todo { background: rgba(136,192,208,0.16); color: var(--accent); }
+  .ascii {
+    font: 12px/1.4 "SF Mono", Menlo, Consolas, monospace;
+    background: var(--bg-code); color: var(--fg);
+    padding: 12px 16px; border-radius: 5px;
+    border: 1px solid var(--border-soft);
+    overflow-x: auto; white-space: pre;
+    margin: 4px 0 16px;
+  }
+  details {
+    margin: 4px 0 12px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border-soft);
+    border-radius: 5px;
+    padding: 8px 14px;
+  }
+  details summary {
+    cursor: pointer;
+    color: var(--fg-bright);
+    font-weight: 500;
+    font-size: 13.5px;
+    padding: 2px 0;
+    list-style: none;
+  }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::before {
+    content: "▸ "; color: var(--accent); display: inline-block; width: 16px;
+    transition: transform 0.15s;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  details summary .qlabel {
+    color: var(--accent); font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px; margin-right: 6px;
+  }
+  details pre {
+    background: var(--bg-code); color: var(--fg);
+    padding: 12px 14px; border-radius: 4px;
+    border: 1px solid var(--border-soft);
+    overflow-x: auto;
+    font: 12px/1.5 "SF Mono", Menlo, Consolas, monospace;
+    margin: 10px 0 4px;
+  }
+  details p { font-size: 13.5px; color: var(--fg-dim); margin: 8px 0 4px; }
+  .caveat {
+    background: var(--bg-elev);
+    border-left: 3px solid var(--warn);
+    padding: 8px 14px;
+    border-radius: 0 4px 4px 0;
+    font-size: 13px;
+    color: var(--fg-dim);
+    margin: 0 0 24px;
+  }
+  .caveat strong { color: var(--fg-bright); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>VM-8750 — Option B</h1>
+  <p class="goal">Ship the structural fix (L4); let the scaffolding actually be temporary.</p>
+</header>
+
+<p class="caveat"><strong>Caveat:</strong> all counts cited here are from the local dev DB. Akshay's prod audit numbers may differ. Run the queries in <a href="#queries">§ Prod queries</a> against prod before locking the migration body or threshold.</p>
+
+<h2>PR #5224 — restructure <span class="tag tag-warn">open</span></h2>
+<ul>
+  <li><strong>Drop L2 (twin-swap on read) entirely.</strong>
+    <span class="why">Layer 3 will repoint the same 1,823 line items that L2 was bridging — its value collapses to the deploy → migration window. Not worth ~140 LOC in the hot product-read path with a full-field overlay that silently substitutes price/name.</span>
+  </li>
+  <li><strong>Keep the existing L1 defensive code</strong> (savepoint, <code>ON CONFLICT WHERE</code>, both skip-log keys).
+    <span class="why">It defends against multi-active conflicts (Failure B) that the sanity check below doesn't cover. The 7 untriaged conflict groups would otherwise abort entire ingest batches. Retires automatically once L4+L5 land.</span>
+  </li>
+  <li><strong>Add ingest sanity check:</strong> if existing <code>package_amount</code> differs from incoming by ≥ 5×, log <code>cardinal.suspiciousPackageAmountChange</code> WARNING and skip the UPDATE.
+    <span class="why">The actual root cause is Cardinal occasionally returning <code>uom_to_each = 1</code> for an SKU+UoM normally at 10/100. Catches the bug at the source, before any bad row is written. Permanent value — Cardinal will glitch again post-L4.</span>
+  </li>
+</ul>
+
+<details>
+  <summary>The sanity-check shape (inserted into existing function)</summary>
+  <pre><code>if existing:
+    existing_pa = existing[0]["package_amount"]
+    incoming_pa = params["package_amount"]
+    if _is_suspicious_package_amount_change(existing_pa, incoming_pa):
+        log("cardinal.suspiciousPackageAmountChange", level=WARNING, ...)
+        return distributor_product_id  # leave row alone
+
+    # ... existing savepoint + UPDATE block, unchanged ...
+
+def _is_suspicious_package_amount_change(existing, incoming):
+    if existing is None or existing == 0 or incoming == 0:
+        return False
+    ratio = max(existing, incoming) / min(existing, incoming)
+    return ratio &gt;= 5.0</code></pre>
+</details>
+
+<h2>PR #5225 — expand <span class="tag tag-warn">open</span></h2>
+<ul>
+  <li><strong>Expand L3 from the 4 known rows to ~50.</strong> Repoint line items + deactivate the bad row for every Cardinal <code>(distributor_id, external_product_id, package_amount_string)</code> group that has exactly two active rows in <code>[real, 1]</code> shape.
+    <span class="why">Same root cause for all of them. <code>ANC7800TLCTN</code> alone has 105 LIs in 90 days and is leaking right now. Leaving these undefended guarantees VM-8750 recurs on a different SKU.</span>
+  </li>
+  <li><strong>Generate the migration body via a committed Python script</strong>, not hand-written. Script consumes Q-L3 output, emits one SQL block per row, prints excluded groups for L5 review.
+    <span class="why">Reproducible — reviewers re-run and verify parity. The 50-row punch list is human-validated before SQL is written.</span>
+  </li>
+  <li><strong>Exclude the 7 ambiguous groups</strong> (multi-active with neither row clearly canonical: <code>57BUC08P</code>, <code>60256001</code>, <code>881534S1/S2</code>, <code>EV300039</code>, <code>6237539</code>, <code>62120105</code>, <code>OSFOFACB57L/M</code>, <code>YY2021610/616</code>, <code>GTLGEN</code> cluster).
+    <span class="why">Need product-data input from Cardinal/ops to pick the canonical row. Tracked under L5.</span>
+  </li>
+</ul>
+
+<h2>PR #5226 — create <span class="tag tag-todo">new</span></h2>
+<ul>
+  <li><strong>Partial unique index on the natural key</strong>, scoped to active rows:
+    <pre style="margin:8px 0 0; font-size:12px; background:var(--bg-code); border:1px solid var(--border-soft); padding:10px 14px; border-radius:4px; font-family:'SF Mono',Menlo,Consolas,monospace; color:var(--fg);">CREATE UNIQUE INDEX CONCURRENTLY distributor_products_natural_key_idx
+  ON distributor_products (distributor_id, external_product_id, COALESCE(package_amount_string, ''))
+  WHERE is_active IS NOT FALSE;</pre>
+    <span class="why">Makes the bug class structurally impossible. Without it, L1's helper is bypassable by any direct INSERT (script, manual SQL, future engineer who didn't know).</span>
+  </li>
+  <li><strong>Gated on L5</strong> — index creation fails until each of the 7 ambiguous groups has at most one active row.</li>
+</ul>
+
+<h2>L5 — file the Linear ticket <span class="tag tag-todo">new</span></h2>
+<ul>
+  <li><strong>Triage the 7 ambiguous conflict groups</strong> with Cardinal or DME ops. Each must end with exactly one canonical active row; deactivate the others.
+    <span class="why">Without a named owner, L4 never lands and L1's complex defensive code stays forever. Probably one conversation with Cardinal — not large work, just needs ownership.</span>
+  </li>
+</ul>
+
+<h2>Follow-up — observability log <span class="tag tag-todo">new</span></h2>
+<ul>
+  <li><strong>Add WARNING log in <code>compute_quantity</code></strong> if it reads a row with <code>is_active = FALSE</code>. No data substitution.
+    <span class="why">3-line observability beats 140-line L2 overlay. Catches anything L0+L3 missed (e.g. one of the 7 ambiguous SKUs getting selected). Tear out after 30 days clean.</span>
+  </li>
+</ul>
+
+<h2>Follow-up — after L4 lands</h2>
+<ul>
+  <li><strong>Collapse L1 to plain <code>INSERT … ON CONFLICT (natural_key) DO UPDATE</code></strong>. Drop the savepoint, the <code>ON CONFLICT WHERE</code> safety net, and the two skip log keys.
+    <span class="why">After L4: Failure A (old unique-index collision) is impossible — drop the old index. Failure B (multi-active conflict) is impossible — the new index permits only one active row per group. Defensive code becomes dead. Sanity check stays — its value is independent of L4.</span>
+  </li>
+</ul>
+
+<h2>Ordering</h2>
+<div class="ascii">#5223 (merged)
+  +
+#5224 (revised) ──┬──► deploy together ──► #5225 migration runs
+                  │
+follow-up log PR ─┘                                │
+                                                   ▼
+                                          L5 triage ticket
+                                                   │
+                                                   ▼
+                                            PR #5226 (L4)
+                                                   │
+                                                   ▼
+                                  L1 simplification follow-up</div>
+<ul>
+  <li>#5224 must merge before #5225's migration runs (sanity check protects against in-window glitches).</li>
+  <li>L5 runs in parallel — doesn't block other PRs.</li>
+  <li>#5226 only after L5.</li>
+</ul>
+
+<h2 id="queries">Prod queries to run</h2>
+<p>Postgres MCP only reaches local dev. Run these against prod; results feed the migration body, threshold, and L5 list.</p>
+
+<details>
+  <summary><span class="qlabel">Q-L3</span> Generate the ~50-row L3 candidate list</summary>
+  <p>Returns rows in <code>[real, 1]</code> shape with line-item counts. Feeds the generation script. Expect ~50 rows.</p>
+  <pre><code>WITH groups AS (
+  SELECT
+    distributor_id, external_product_id,
+    COALESCE(package_amount_string, '') AS uom,
+    ARRAY_AGG(id ORDER BY package_amount NULLS LAST) FILTER (WHERE is_active IS NOT FALSE) AS active_ids_by_pa,
+    ARRAY_AGG(package_amount ORDER BY package_amount NULLS LAST) FILTER (WHERE is_active IS NOT FALSE) AS active_pas_by_pa
+  FROM distributor_products
+  WHERE distributor_id = 2 AND external_product_id IS NOT NULL
+  GROUP BY 1, 2, 3
+  HAVING COUNT(*) FILTER (WHERE is_active IS NOT FALSE) &gt;= 2
+),
+candidates AS (
+  SELECT
+    external_product_id AS sku, uom,
+    active_ids_by_pa[1] AS bad_id, active_pas_by_pa[1] AS bad_pa,
+    active_ids_by_pa[2] AS canonical_id, active_pas_by_pa[2] AS canonical_pa
+  FROM groups
+  WHERE array_length(active_ids_by_pa, 1) = 2
+    AND active_pas_by_pa[1] = 1
+    AND active_pas_by_pa[2] &gt; 1
+)
+SELECT c.sku, c.uom, c.bad_id, c.bad_pa, c.canonical_id, c.canonical_pa,
+       COUNT(osli.id) FILTER (WHERE osli.deleted_at IS NULL) AS line_items_to_repoint
+FROM candidates c
+LEFT JOIN order_segment_line_items osli ON osli.distributor_product_id = c.bad_id
+GROUP BY 1, 2, 3, 4, 5, 6
+ORDER BY line_items_to_repoint DESC, c.sku;</code></pre>
+</details>
+
+<details>
+  <summary><span class="qlabel">Q-L5</span> List the ambiguous (non-<code>[real, 1]</code>) groups</summary>
+  <p>Complement of Q-L3. Expect ~7-10 rows. Surprises here reset L5 scope.</p>
+  <pre><code>WITH groups AS (
+  SELECT
+    distributor_id, external_product_id,
+    COALESCE(package_amount_string, '') AS uom,
+    ARRAY_AGG(id ORDER BY package_amount NULLS LAST) FILTER (WHERE is_active IS NOT FALSE) AS active_ids,
+    ARRAY_AGG(package_amount ORDER BY package_amount NULLS LAST) FILTER (WHERE is_active IS NOT FALSE) AS active_pas,
+    COUNT(*) FILTER (WHERE is_active IS NOT FALSE) AS active_count
+  FROM distributor_products
+  WHERE distributor_id = 2 AND external_product_id IS NOT NULL
+  GROUP BY 1, 2, 3
+  HAVING COUNT(*) FILTER (WHERE is_active IS NOT FALSE) &gt;= 2
+)
+SELECT external_product_id AS sku, uom, active_count, active_ids, active_pas,
+       (SELECT COUNT(*) FROM order_segment_line_items osli
+        WHERE osli.distributor_product_id = ANY(active_ids) AND osli.deleted_at IS NULL) AS total_lis
+FROM groups
+WHERE NOT (array_length(active_ids, 1) = 2 AND active_pas[1] = 1 AND active_pas[2] &gt; 1)
+ORDER BY total_lis DESC, external_product_id;</code></pre>
+</details>
+
+<details>
+  <summary><span class="qlabel">Q-M</span> Confirm Mercy has zero natural-key conflicts</summary>
+  <p>L4 design assumes this. If non-zero, the partial index needs a per-distributor predicate.</p>
+  <pre><code>SELECT COUNT(*) AS mercy_natural_key_conflicts
+FROM (
+  SELECT external_product_id, COALESCE(package_amount_string, '') AS uom
+  FROM distributor_products
+  WHERE distributor_id = 1 AND external_product_id IS NOT NULL AND is_active IS NOT FALSE
+  GROUP BY 1, 2 HAVING COUNT(*) &gt; 1
+) m;</code></pre>
+</details>
+
+<details>
+  <summary><span class="qlabel">Q-T</span> Validate the 5× threshold against history</summary>
+  <p>How many existing conflict groups have a ratio that would NOT trip 5× (i.e. small enough to look legitimate)? Tunes the threshold.</p>
+  <pre><code>SELECT
+  COUNT(*) AS conflict_groups,
+  COUNT(*) FILTER (WHERE pa_ratio &gt;= 5) AS would_catch_at_5x,
+  COUNT(*) FILTER (WHERE pa_ratio &gt;= 3 AND pa_ratio &lt; 5) AS would_only_catch_at_3x,
+  COUNT(*) FILTER (WHERE pa_ratio &lt; 3) AS would_miss_borderline
+FROM (
+  SELECT MAX(package_amount)::numeric / NULLIF(MIN(package_amount), 0) AS pa_ratio
+  FROM distributor_products
+  WHERE distributor_id = 2 AND is_active IS NOT FALSE AND external_product_id IS NOT NULL
+  GROUP BY external_product_id, COALESCE(package_amount_string, '')
+  HAVING COUNT(*) &gt; 1
+) ratios;</code></pre>
+</details>
+
+<details>
+  <summary><span class="qlabel">Q-V</span> Post-migration verification</summary>
+  <p>Run after #5225 migration. Expect zero rows / 0 / 0.</p>
+  <pre><code>-- V1: no line items left on the migrated bad ids
+SELECT distributor_product_id, COUNT(*) FROM order_segment_line_items
+WHERE distributor_product_id IN (&lt;paste bad_id list from Q-L3&gt;) AND deleted_at IS NULL
+GROUP BY 1;
+
+-- V2: all bad ids deactivated
+SELECT COUNT(*) FROM distributor_products
+WHERE id IN (&lt;same list&gt;) AND is_active IS NOT FALSE;
+
+-- V3: re-run Q-L3, should return 0 rows</code></pre>
+</details>
+
+<h2>Open decisions</h2>
+<ul>
+  <li><strong>L5 owner.</strong> Without a name, L4 hangs and L1's complex code stays forever.</li>
+  <li><strong>5× threshold.</strong> Validate via Q-T before locking. Could tighten to 3× if history is clean.</li>
+  <li><strong>Confirm with Akshay:</strong> drop L2 OK, given expanded L3 + the <code>compute_quantity</code> log cover the same ground?</li>
+</ul>
+
+</div>
+</body>
+</html>
